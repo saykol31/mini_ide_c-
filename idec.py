@@ -65,6 +65,7 @@ def listar():
         editor.insert(tk.END, contenido)
         editor.edit_modified(False)
         ultimo_archivo = archivo
+        actualizar_lineas()
         resaltar()
 
 def auto_indent(event):
@@ -420,6 +421,7 @@ def copiar():
 def pegar():
     editor.event_generate("<<Paste>>")
     editor.after_idle(resaltar)
+    editor.after_idle(actualizar_lineas)
 
 # Limpiar consola
     consola.config(state="normal")
@@ -3869,8 +3871,8 @@ frame_editor = tk.Frame(root)
 frame_editor.pack(fill="both", expand=True, padx=5, pady=5)
 
 # --- Barra de números de línea ---
-lineas = tk.Text(frame_editor, width=4, padx=3, takefocus=0, border=0,
-                 background="#202631", foreground="#8391A5", state="disabled", wrap="none")
+lineas = tk.Text(frame_editor, width=5, padx=8, takefocus=0, border=0,
+                 background="#202631", foreground="#54769F", font=("Consolas", 12), state="disabled", wrap="none")
 lineas.pack(side="left", fill="y")
 
 
@@ -3963,7 +3965,7 @@ editor.bind("<Return>", on_return)
 
 # Llamar resaltar + actualizar líneas en eventos de edición
 editor.bind("<Any-KeyRelease>", lambda e: [actualizar_lineas(), resaltar()])
-editor.bind("<Button-1>", lambda e: [actualizar_lineas(), resaltar()])
+editor.bind("<Button-1>", lambda e: resaltar())
 editor.bind("<MouseWheel>", lambda e: [actualizar_lineas(), resaltar()])
 
 
@@ -4243,7 +4245,6 @@ root.bind("<F5>", lambda e: root.after_idle(build))
 root.bind("<F6>", lambda e: root.after_idle(compilar))
 root.bind("<F7>", lambda e: root.after_idle(debug))
 root.bind("<F8>", lambda e: root.after_idle(ejecutar))
-editor.bind("<Return>", auto_indent)
 editor.bind("<KeyRelease>", resaltar)
 
 # --- CENTRAR VENTANA ---
