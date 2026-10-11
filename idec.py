@@ -3151,12 +3151,54 @@ def ejecutar():
     # Hilo para leer stderr en tiempo real
     threading.Thread(target=_leer_salida, args=(proceso_ejecucion.stderr,), daemon=True).start()
 
+def _insertar_salida(texto):
+    """
+    Inserta texto en la consola sin añadir saltos de línea.
+    Permite mostrar solicitudes de C++ que terminan en espacios
+    o dos puntos, como: 'Introduce el valor de x: '.
+    Esta función se ejecuta en el hilo principal de Tkinter.
+    """
+    if not texto:
+        return
+
+    try:
+        consola.configure(state="normal")
+        consola.insert(tk.END, texto)
+        consola.see(tk.END)
+    finally:
+        consola.configure(state="disabled")
+
 def _leer_salida(pipe):
-    """Lee stdout/stderr en tiempo real y lo muestra en la consola integrada"""
-    for linea in iter(pipe.readline, ''):
-        if linea:
-            consola.after(0, print_consola, linea.rstrip())
-    pipe.close()
+    """
+    Lee stdout o stderr carácter a carácter para que las
+    solicitudes sin salto de línea aparezcan inmediatamente.
+    La lectura se realiza en un hilo secundario; las
+    actualizaciones de Tkinter se programan en el hilo principal.
+    """
+    try:
+        while True:
+            caracter = pipe.read(1)
+
+            if caracter == "":
+                break
+
+            consola.after(0, _insertar_salida, caracter)
+
+    except (OSError, ValueError) as error:
+        try:
+            consola.after(
+                0,
+                print_consola,
+                f"\nError leyendo la salida del proceso: {error}"
+            )
+        except (RuntimeError, tk.TclError):
+            pass
+
+    finally:
+        try:
+            pipe.close()
+        except (OSError, ValueError):
+            pass
 
 # Entrada de consola para enviar datos al proceso
 entrada_consola = tk.Entry(
