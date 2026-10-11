@@ -9,6 +9,8 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import glob
 import time
+import hashlib
+import difflib
 
 # Importaciones de terceros
 from PIL import Image, ImageTk
@@ -65,6 +67,7 @@ def listar():
         editor.insert(tk.END, contenido)
         editor.edit_modified(False)
         ultimo_archivo = archivo
+        reiniciar_seguimiento_lineas()
         actualizar_lineas()
         resaltar()
 
@@ -106,6 +109,7 @@ def guardar():
                 f.write(contenido)
 
             editor.edit_modified(False)
+            marcar_lineas_guardadas()
 
             ruta_carpeta = os.path.dirname(
                 ultimo_archivo
@@ -318,6 +322,7 @@ def guardar():
         ultimo_archivo = ruta_archivo
 
         editor.edit_modified(False)
+        marcar_lineas_guardadas()
 
         # ========================================================
         # MENSAJE
@@ -440,6 +445,7 @@ def limpiar_area():
          # Limpiar editor
     editor.delete("1.0", tk.END)
     editor.edit_modified(False)
+    reiniciar_seguimiento_lineas()
     actualizar_busqueda()
 
      # Limpiar consola integrada
@@ -4081,6 +4087,12 @@ scroll_hor.pack(side="bottom", fill="x")
 editor = tk.Text(frame_editor, wrap="none", background="#1E232D", foreground="#D8DEE9", insertbackground="#4DE3C1", selectbackground="#354457", selectforeground="#FFFFFF", yscrollcommand=scroll_vert.set, xscrollcommand=scroll_hor.set, font=("Consolas", 12), undo=True)
 editor.pack(side="left", fill="both", expand=True)
 
+# Estilos del gutter inteligente y de la línea del cursor.
+lineas.tag_config("gutter_dirty", foreground="#FF9F43")
+lineas.tag_config("gutter_saved", foreground="#65C98A")
+editor.tag_config("cursor_line", background="#252C38")
+editor.tag_lower("cursor_line")
+
 # --- Scroll sincronizado entre editor y números de línea ---
 def sync_scroll(*args):
     editor.yview(*args)
@@ -4113,6 +4125,122 @@ editor.bind("<MouseWheel>", on_mouse_wheel)  # Windows/Mac
 editor.bind("<Button-4>", on_mouse_wheel)    # Linux scroll up
 editor.bind("<Button-5>", on_mouse_wheel)    # Linux scroll down
 
+
+# ============================================================
+# GUTTER INTELIGENTE: SEGUIMIENTO DE CAMBIOS POR HASH
+# ============================================================
+
+_gutter_hashes = []
+_gutter_states = []
+
+def _hashes_actuales_editor():
+    contenido = editor.get("1.0", "end-1c")
+    lineas_actuales = contenido.split("\n")
+    return [
+        hashlib.sha256(linea.encode("utf-8")).hexdigest()
+        for linea in lineas_actuales
+    ]
+
+def _pintar_marcas_gutter():
+    lineas.config(state="normal")
+    lineas.tag_remove("gutter_dirty", "1.0", tk.END)
+    lineas.tag_remove("gutter_saved", "1.0", tk.END)
+
+    for numero, estado in enumerate(_gutter_states, start=1):
+        if estado == "dirty":
+            lineas.tag_add(
+                "gutter_dirty",
+                f"{numero}.0",
+                f"{numero}.end"
+            )
+        elif estado == "saved":
+            lineas.tag_add(
+                "gutter_saved",
+                f"{numero}.0",
+                f"{numero}.end"
+            )
+
+    lineas.config(state="disabled")
+
+def reiniciar_seguimiento_lineas():
+    """Establece el contenido actual como una nueva base limpia."""
+    global _gutter_hashes, _gutter_states
+
+    _gutter_hashes = _hashes_actuales_editor()
+    _gutter_states = ["clean"] * len(_gutter_hashes)
+
+def _actualizar_estado_gutter():
+    """Mantiene las marcas alineadas al comparar los extremos del contenido."""
+    global _gutter_hashes, _gutter_states
+
+    hashes_nuevos = _hashes_actuales_editor()
+
+    if not _gutter_hashes:
+        _gutter_hashes = hashes_nuevos
+        _gutter_states = ["clean"] * len(hashes_nuevos)
+    else:
+        hashes_anteriores = _gutter_hashes
+        estados_anteriores = _gutter_states
+
+        # Buscar el prefijo idéntico sin desplazar líneas anteriores.
+        prefijo = 0
+        limite = min(len(hashes_anteriores), len(hashes_nuevos))
+
+        while (
+            prefijo < limite
+            and hashes_anteriores[prefijo] == hashes_nuevos[prefijo]
+        ):
+            prefijo += 1
+
+        # Buscar el sufijo idéntico, sin cruzar el prefijo.
+        sufijo = 0
+        while (
+            sufijo < len(hashes_anteriores) - prefijo
+            and sufijo < len(hashes_nuevos) - prefijo
+            and hashes_anteriores[-1 - sufijo]
+                == hashes_nuevos[-1 - sufijo]
+        ):
+            sufijo += 1
+
+        estados_nuevos = ["dirty"] * len(hashes_nuevos)
+
+        # Conservar exactamente los estados del prefijo intacto.
+        estados_nuevos[:prefijo] = estados_anteriores[:prefijo]
+
+        # Conservar los estados del sufijo intacto, aunque haya
+        # cambiado su número de línea por una inserción o eliminación.
+        if sufijo:
+            estados_nuevos[len(hashes_nuevos) - sufijo:] = (
+                estados_anteriores[len(hashes_anteriores) - sufijo:]
+            )
+
+        _gutter_hashes = hashes_nuevos
+        _gutter_states = estados_nuevos
+
+    _pintar_marcas_gutter()
+
+
+def marcar_lineas_guardadas():
+    """Convierte las líneas naranjas en verdes tras guardar correctamente."""
+    global _gutter_states
+
+    _gutter_states = [
+        "saved" if estado == "dirty" else estado
+        for estado in _gutter_states
+    ]
+    _pintar_marcas_gutter()
+
+def actualizar_linea_cursor(event=None):
+    """Resalta suavemente la línea actual sin reemplazar colores de sintaxis."""
+    editor.tag_remove("cursor_line", "1.0", tk.END)
+
+    inicio = editor.index("insert linestart")
+    fin = editor.index("insert lineend +1c")
+
+    editor.tag_add("cursor_line", inicio, fin)
+    editor.tag_lower("cursor_line")
+
+
 # --- Actualizar números de línea ---
 def actualizar_lineas(event=None):
     lineas.config(state="normal")
@@ -4123,6 +4251,7 @@ def actualizar_lineas(event=None):
     lineas.insert("1.0", numeros)
     lineas.config(state="disabled")
     lineas.yview_moveto(editor.yview()[0])
+    _actualizar_estado_gutter()
 
 # --- Auto-indent + actualizar líneas correctamente ---
 def on_return(event):
@@ -4439,6 +4568,14 @@ root.bind("<F6>", lambda e: root.after_idle(compilar))
 root.bind("<F7>", lambda e: root.after_idle(debug))
 root.bind("<F8>", lambda e: root.after_idle(ejecutar))
 editor.bind("<KeyRelease>", resaltar)
+editor.bind("<KeyRelease>", actualizar_linea_cursor, add="+")
+editor.bind("<Button-1>", actualizar_linea_cursor, add="+")
+for evento_edicion in ("<<Paste>>", "<<Cut>>", "<<Undo>>", "<<Redo>>"):
+    editor.bind(
+        evento_edicion,
+        lambda event: editor.after_idle(actualizar_lineas),
+        add="+"
+    )
 
 root.bind("<Control-f>", abrir_busqueda)
 root.bind("<Control-F>", abrir_busqueda)
