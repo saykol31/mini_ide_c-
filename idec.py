@@ -1,5 +1,6 @@
 # Importaciones estándar
 import os
+from pathlib import Path
 import re
 import shlex
 import subprocess
@@ -13,12 +14,16 @@ import time
 from PIL import Image, ImageTk
 
 
-# --- RUTAS ---
-CARPETA_C = os.path.expanduser("~/C")
-CARPETA_MANT = os.path.join(CARPETA_C, "MANTENIMIENTO")
-UPDATER = os.path.join(CARPETA_MANT, "UPDATER_ENTORNO.cpp")
-CARPETA_ICONOS = os.path.expanduser("~/C/Icons")
+# --- RUTAS PORTABLES ---
+BASE_DIR = Path(__file__).resolve().parent
 
+# Recursos que viajan dentro del repositorio
+CARPETA_ICONOS = BASE_DIR / "Icons"
+CARPETA_MANT = BASE_DIR / "MANTENIMIENTO"
+UPDATER = CARPETA_MANT / "UPDATER_ENTORNO.cpp"
+
+# Carpeta de trabajo predeterminada del usuario
+CARPETA_C = Path.home() / "C"
 
 ultimo_archivo = None
 
@@ -453,30 +458,39 @@ def limpiar_area():
 
 
 def ejecutar_updater():
-    if not os.path.isfile(UPDATER):
-        messagebox.showerror("Error", f"No se encontró el archivo: {UPDATER}")
+    if not UPDATER.is_file():
+        messagebox.showerror(
+            "Error",
+            f"No se encontró el archivo: {UPDATER}"
+        )
         return
-    bin_updater = os.path.join(CARPETA_MANT, 'UPDATER_ENTORNO')
+
+    bin_updater = CARPETA_MANT / "UPDATER_ENTORNO"
+    archivo_errores = CARPETA_MANT / "error.log"
+
     bash_cmd = f"""
-    g++ {shlex.quote(UPDATER)} -o {shlex.quote(bin_updater)} 2>error.log
+    g++ {shlex.quote(str(UPDATER))} -o {shlex.quote(str(bin_updater))} 2>{shlex.quote(str(archivo_errores))}
     if [ $? -eq 0 ]; then
         echo -e "\\033[1;32m✅ Compilación exitosa. Ejecutando updater...\\033[0m"
-        {shlex.quote(bin_updater)}
+        {shlex.quote(str(bin_updater))}
     else
         echo -e "\\033[1;31m❌ Error de compilación:\\033[0m"
-        cat error.log
+        cat {shlex.quote(str(archivo_errores))}
     fi
     read -p "Presiona ENTER para cerrar..."
     """
-    subprocess.Popen(["konsole", "--noclose", "-e", "bash", "-c", bash_cmd], cwd=CARPETA_MANT)
 
+    subprocess.Popen(
+        ["konsole", "--noclose", "-e", "bash", "-c", bash_cmd],
+        cwd=str(CARPETA_MANT)
+    )
 
 ###################  CREAR  #######################
 
 def crear_externo():
     # Abrir VS Code en la carpeta CARPETA_C
     try:
-        subprocess.Popen(["code", CARPETA_C])
+        subprocess.Popen(["code", str(CARPETA_C)])
         # Limpiar consola integrada
         consola.config(state="normal")
         consola.delete("1.0", tk.END)
@@ -484,75 +498,6 @@ def crear_externo():
         print_consola(f"✅ VS Code abierto en: {CARPETA_C}", "amarillo")
     except Exception as e:
         print_consola(f"❌ Error al abrir VS Code: {e}", "rojo")
-
-
-
-###################  LINKEAR  #######################
-
-SRC_FILE = "/home/saykol/C/vulkan_xcb_test.cpp"
-BIN_FILE = "/home/saykol/C/vulkan_xcb_test"
-
-def print_consola(msg):
-    """Imprime mensaje en consola integrada con colores."""
-    print(f"\033[1;34m[linker]\033[0m {msg}")
-
-def linker():
-    try:
-        # ---------------- COMPILAR ----------------
-        print_consola("⚙️ Compilando...")
-        proceso = subprocess.Popen(
-            [
-                "g++", SRC_FILE, "-o", BIN_FILE,
-                "-std=c++17", "-O2", "-g", "-Wall",
-                "-lvulkan", "-lxcb"
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
-
-        # Capturar salida en tiempo real
-        for linea in proceso.stdout:
-            print_consola(linea.rstrip())
-        for linea in proceso.stderr:
-            print_consola(f"\033[1;31m{linea.rstrip()}\033[0m")
-        proceso.wait()
-
-        if proceso.returncode != 0:
-            print_consola("❌ Error en compilación.")
-            return
-        print_consola("✅ Compilación exitosa.")
-
-        # ---------------- EJECUTAR ----------------
-        env = os.environ.copy()
-        env["__NV_PRIME_RENDER_OFFLOAD"] = "1"
-        env["__GLX_VENDOR_LIBRARY_NAME"] = "nvidia"
-        env["VK_ICD_FILENAMES"] = "/usr/share/vulkan/icd.d/nvidia_icd.json"
-
-        def run_program():
-            print_consola("🚀 Ejecutando binario Vulkan...")
-            proc = subprocess.Popen(
-                [BIN_FILE],
-                env=env,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-            for linea in proc.stdout:
-                print_consola(linea.rstrip())
-            for linea in proc.stderr:
-                print_consola(f"\033[1;31m{linea.rstrip()}\033[0m")
-            proc.wait()
-            if proc.returncode == 0:
-                print_consola("✅ Ejecución finalizada.")
-            else:
-                print_consola("❌ Error en ejecución.")
-
-        # Lanzar ejecución en un hilo para no bloquear la consola
-        threading.Thread(target=run_program, daemon=True).start()
-
-    except Exception as e:
-        print_consola(f"❌ Excepción: {e}")
 
 
 
@@ -2018,23 +1963,46 @@ def make():
     return generar_cmakelists()
 ###################  BUILD  #######################
 
-
-
-def _carpeta_proyecto():
-    """Usa la carpeta del archivo abierto; si no, CARPETA_C."""
-    if 'ultimo_archivo' in globals() and ultimo_archivo:
-        return os.path.dirname(os.path.abspath(ultimo_archivo))
-    return os.path.abspath(CARPETA_C)
-
 def _nombre_proyecto(ruta):
     return os.path.basename(os.path.abspath(ruta)) or "MiPrograma"
 
+
+def _nombre_objetivo_cmake(contenido, predeterminado):
+    """Obtiene el nombre del primer objetivo ejecutable de CMake."""
+
+    proyecto = re.search(
+        r"(?im)^\s*project\s*\(\s*([A-Za-z_][A-Za-z0-9_.+-]*)",
+        contenido,
+    )
+
+    nombre_proyecto = proyecto.group(1) if proyecto else predeterminado
+
+    objetivo = re.search(
+        r"(?is)\badd_executable\s*\(\s*([^\s()]+)",
+        contenido,
+    )
+
+    if not objetivo:
+        return nombre_proyecto
+
+    nombre = objetivo.group(1).strip()
+
+    if nombre.upper() == "${PROJECT_NAME}":
+        return nombre_proyecto
+
+    if nombre.startswith("${"):
+        return nombre_proyecto
+
+    return nombre
+
+
 def build():
+
     """
     Genera la carpeta build/, configura y compila con CMake.
     - Detecta si es un proyecto BGFX (busca CMakeLists.txt con include bgfx)
     - Para BGFX, binario se genera en 'bin/'
-    - Para proyectos genéricos, binario en raíz del proyecto
+    - Los ejecutables se esperan en bin/
     - Muestra salida línea por línea en consola integrada
     """
     ruta = os.path.abspath(_carpeta_proyecto())
@@ -2089,21 +2057,14 @@ def build():
                 messagebox.showerror("Build", "❌ Error en compilación")
                 return
 
-            # Detectar binario generado
-            if es_bgfx:
-                bin_dir = os.path.join(ruta, "bin")
-                bin_path = os.path.join(bin_dir, nombre_proyecto)
-            else:
-                bin_path = os.path.join(ruta, nombre_proyecto)
+            # Todos los ejecutables de IDEC deben estar en bin/.
+            bin_dir = os.path.join(ruta, "bin")
+            nombre_objetivo = _nombre_objetivo_cmake(
+                contenido, nombre_proyecto
+            )
+            bin_path = os.path.join(bin_dir, nombre_objetivo)
 
-            if not os.path.exists(bin_path):
-                # Buscar recursivo si no se encuentra
-                for root, _, files in os.walk(ruta):
-                    if nombre_proyecto in files:
-                        bin_path = os.path.join(root, nombre_proyecto)
-                        break
-
-            if os.path.exists(bin_path):
+            if os.path.isfile(bin_path):
                 print_consola(f"\033[1;32m✅ Build completado. Binario: {bin_path}\033[0m")
                 messagebox.showinfo("Build", f"✅ Build completado.\nBinario:\n{bin_path}")
             else:
@@ -2135,9 +2096,8 @@ from tkinter import messagebox
 
 CPP_STD = "c++17"
 
-CARPETA_C = os.path.expanduser("~/C")
+# CARPETA_C se define una sola vez al inicio del archivo
 
-ultimo_archivo = None
 
 
 # ============================================================
@@ -3025,7 +2985,9 @@ def depurar():
 
     ruta_proyecto = os.path.dirname(os.path.abspath(ultimo_archivo))
     nombre_salida = os.path.splitext(os.path.basename(ultimo_archivo))[0]
-    salida = os.path.join(ruta_proyecto, nombre_salida)
+    ruta_bin = os.path.join(ruta_proyecto, "bin")
+    os.makedirs(ruta_bin, exist_ok=True)
+    salida = os.path.join(ruta_bin, nombre_salida)
 
     # Detectar compilador
     if ultimo_archivo.endswith(".c"):
@@ -3725,7 +3687,6 @@ def glad():
 
 
 weston_proc = None
-proceso_ejecucion = None
 
 def abrir_weston_y_bgfx():
     global weston_proc, proceso_ejecucion, ultimo_archivo
@@ -3784,7 +3745,7 @@ def abrir_weston_y_bgfx():
 
     ruta_proyecto = os.path.dirname(os.path.abspath(ultimo_archivo))
     nombre_salida = os.path.splitext(os.path.basename(ultimo_archivo))[0]
-    salida = os.path.join(ruta_proyecto, nombre_salida)
+    salida = os.path.join(ruta_proyecto, "bin", nombre_salida)
 
     if not os.path.exists(salida):
         messagebox.showwarning("Error", "Primero compila el archivo")
@@ -3818,8 +3779,6 @@ def abrir_weston_y_bgfx():
 
 # Variables globales
 bgfx_proc = None
-weston_proc = None
-ultimo_archivo = None  # tu variable que apunta al archivo actual
 
 def ejecutar_bgfx():
     global bgfx_proc, weston_proc, ultimo_archivo
@@ -3830,7 +3789,7 @@ def ejecutar_bgfx():
 
     ruta_proyecto = os.path.dirname(os.path.abspath(ultimo_archivo))
     nombre_salida = os.path.splitext(os.path.basename(ultimo_archivo))[0]
-    salida = os.path.join(ruta_proyecto, nombre_salida)
+    salida = os.path.join(ruta_proyecto, "bin", nombre_salida)
 
     if not os.path.exists(salida):
         messagebox.showwarning("Error", "Primero compila el archivo")
@@ -3907,11 +3866,6 @@ def ejecutar_bgfx():
     threading.Thread(target=_leer_salida, args=(bgfx_proc.stderr,), daemon=True).start()
 
 
-def _leer_salida(pipe):
-    for linea in iter(pipe.readline, ''):
-        if linea:
-            consola.after(0, print_consola, linea.rstrip())
-    pipe.close()
 
 
 
@@ -3930,7 +3884,7 @@ def cargar_icono(nombre_archivo, tamaño=(48,48)):
 
 
 iconos = {name: cargar_icono(name+".png") for name in [
-    "crear","guardar","select","listar","compilar","linker","ejecutar","debug","limpiar","copiar","cmake","build","paste","actualizar","salir"
+    "crear","guardar","select","listar","compilar","ejecutar","debug","limpiar","copiar","cmake","build","paste","actualizar","salir"
 ]}
 
 refs_imgs = []
@@ -3984,16 +3938,6 @@ for texto, comando, color, icono_nombre in botones_superior:
 ###################   EDITOR  #######################
 
 
-def auto_indent(event):
-    line = editor.get("insert linestart", "insert")
-    indent = ""
-    for c in line:
-        if c in (" ", "\t"):
-            indent += c
-        else:
-            break
-    editor.insert("insert", "\n" + indent)
-    return "break"
 
 
 # --- Area de EDITOR  ---
@@ -4176,7 +4120,6 @@ frame_inferior.pack(side="bottom", fill="x", pady=5)
 #  - -  -  -  -  -  -  -("Nombre del boton", enlace a la funcion , color del boton , "nombre del icono"),
 botones_inferior = [
     ("Crear (F1)", crear_externo, COLOR_NARANJA, "crear"),
-    ("Linker (F2)", linker, COLOR_NARANJA, "linker"),
     ("CMake (F3)", make, COLOR_NARANJA, "cmake"),
     ("Build (F5)", build, COLOR_NARANJA, "build"),
     ("Compile (F6)", compilar, COLOR_NARANJA, "compilar"),
@@ -4335,7 +4278,6 @@ def print_consola(mensaje):
 
 # --- TECLAS RAPIDAS ---
 root.bind("<F1>", lambda e: root.after_idle(crear_externo))
-root.bind("<F2>", lambda e: root.after_idle(linker))
 root.bind("<F3>", lambda e: root.after_idle(make))
 root.bind("<F5>", lambda e: root.after_idle(build))
 root.bind("<F6>", lambda e: root.after_idle(compilar))
