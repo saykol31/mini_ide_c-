@@ -34,12 +34,12 @@ python3 idec.py
 | Tecla | Acción |
 |---|---|
 | F1 | Crear — abre VS Code en la carpeta de trabajo |
-| F2 | Linker — compilación directa de prueba |
 | F3 | CMake — **solo genera** el `CMakeLists.txt` |
 | F5 | Build — compila con CMake, binario en `bin/` |
 | F6 | Compile — compilación directa sin CMake |
 | F7 | Debug — compila con `-g` y abre GDB |
 | F8 | Run — ejecuta con consola interactiva (stdin incluido) |
+|Ctrl| +  F —   Abre el Buscador|
 
 ## Los dos compiladores
 

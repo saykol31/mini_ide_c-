@@ -440,6 +440,7 @@ def limpiar_area():
          # Limpiar editor
     editor.delete("1.0", tk.END)
     editor.edit_modified(False)
+    actualizar_busqueda()
 
      # Limpiar consola integrada
     consola.config(state="normal")
@@ -3870,6 +3871,170 @@ for texto, comando, color, icono_nombre in botones_superior:
 # --- Area de EDITOR  ---
 
 
+
+# ---------------- BUSCADOR INTEGRADO ---------------- #
+
+busqueda_var = tk.StringVar(master=root, value="")
+busqueda_estado = tk.StringVar(master=root, value="0 coincidencias")
+coincidencias_busqueda = []
+indice_busqueda_actual = 0
+
+
+def actualizar_busqueda(*_):
+    """Actualiza las coincidencias sin alterar el contenido del editor."""
+    global indice_busqueda_actual
+
+    editor.tag_remove("search_match", "1.0", tk.END)
+    editor.tag_remove("search_current", "1.0", tk.END)
+    coincidencias_busqueda.clear()
+
+    consulta = busqueda_var.get()
+    if consulta:
+        contenido = editor.get("1.0", "end-1c")
+        for coincidencia in re.finditer(
+            re.escape(consulta), contenido, re.IGNORECASE
+        ):
+            inicio = f"1.0 + {coincidencia.start()} chars"
+            fin = f"1.0 + {coincidencia.end()} chars"
+            coincidencias_busqueda.append(inicio)
+            editor.tag_add("search_match", inicio, fin)
+
+    indice_busqueda_actual = 0
+    total = len(coincidencias_busqueda)
+
+    if total:
+        busqueda_estado.set(f"1 de {total} coincidencias")
+        marcar_coincidencia_actual()
+    else:
+        busqueda_estado.set("0 coincidencias")
+
+    # Las etiquetas de búsqueda deben quedar por encima de la sintaxis.
+    editor.tag_raise("search_match")
+    editor.tag_raise("search_current")
+
+
+def marcar_coincidencia_actual():
+    """Destaca la coincidencia seleccionada actualmente."""
+    editor.tag_remove("search_current", "1.0", tk.END)
+
+    if not coincidencias_busqueda:
+        return
+
+    inicio = coincidencias_busqueda[indice_busqueda_actual]
+    fin = f"{inicio} + {len(busqueda_var.get())} chars"
+    editor.tag_add("search_current", inicio, fin)
+    editor.tag_raise("search_match")
+    editor.tag_raise("search_current")
+    editor.see(inicio)
+    busqueda_estado.set(
+        f"{indice_busqueda_actual + 1} de "
+        f"{len(coincidencias_busqueda)} coincidencias"
+    )
+
+
+def buscar_siguiente(direccion=1):
+    """Recorre las coincidencias de forma circular."""
+    global indice_busqueda_actual
+
+    if not coincidencias_busqueda:
+        actualizar_busqueda()
+        return "break"
+
+    indice_busqueda_actual = (
+        indice_busqueda_actual + direccion
+    ) % len(coincidencias_busqueda)
+
+    marcar_coincidencia_actual()
+    editor.mark_set("insert", coincidencias_busqueda[indice_busqueda_actual])
+    editor.focus_set()
+    return "break"
+
+
+def limpiar_busqueda():
+    """Borra la consulta y todos sus resaltados."""
+    busqueda_var.set("")
+    editor.tag_remove("search_match", "1.0", tk.END)
+    editor.tag_remove("search_current", "1.0", tk.END)
+    editor.focus_set()
+
+
+def cerrar_busqueda():
+    """Oculta la barra sin cambiar el contenido del documento."""
+    frame_busqueda.pack_forget()
+    editor.focus_set()
+
+
+def abrir_busqueda(event=None):
+    """Abre la barra de búsqueda mediante Ctrl+F."""
+    if not frame_busqueda.winfo_manager():
+        frame_busqueda.pack(
+            side="top", fill="x", padx=5, pady=(4, 0),
+            before=frame_editor
+        )
+    busqueda_entrada.focus_set()
+    busqueda_entrada.selection_range(0, tk.END)
+    return "break"
+
+
+frame_busqueda = tk.Frame(root, bg="#181C24")
+frame_busqueda.pack(side="top", fill="x", padx=5, pady=(4, 0))
+
+tk.Label(
+    frame_busqueda, text="Buscar:", bg="#181C24",
+    fg="#D8DEE9", font=("Arial", 10, "bold")
+).pack(side="left", padx=(6, 5), pady=5)
+
+busqueda_entrada = tk.Entry(
+    frame_busqueda, textvariable=busqueda_var, width=30,
+    bg="#252B36", fg="#FFFFFF", insertbackground="#4DE3C1",
+    relief="flat", font=("Consolas", 11)
+)
+busqueda_entrada.pack(side="left", padx=4, pady=5, ipady=4)
+
+tk.Label(
+    frame_busqueda, textvariable=busqueda_estado,
+    bg="#181C24", fg="#AAB7C5", font=("Arial", 9)
+).pack(side="left", padx=8)
+
+tk.Button(
+    frame_busqueda, text="↑ Anterior",
+    command=lambda: buscar_siguiente(-1),
+    bg="#303846", fg="#FFFFFF", activebackground="#414D60",
+    activeforeground="#FFFFFF", relief="flat", padx=7
+).pack(side="left", padx=2, pady=3)
+
+tk.Button(
+    frame_busqueda, text="↓ Siguiente",
+    command=lambda: buscar_siguiente(1),
+    bg="#303846", fg="#FFFFFF", activebackground="#414D60",
+    activeforeground="#FFFFFF", relief="flat", padx=7
+).pack(side="left", padx=2, pady=3)
+
+tk.Button(
+    frame_busqueda, text="Limpiar",
+    command=limpiar_busqueda,
+    bg="#303846", fg="#FFFFFF", activebackground="#414D60",
+    activeforeground="#FFFFFF", relief="flat", padx=7
+).pack(side="left", padx=2, pady=3)
+
+tk.Button(
+    frame_busqueda, text="✕",
+    command=cerrar_busqueda,
+    bg="#633B45", fg="#FFFFFF", activebackground="#804653",
+    activeforeground="#FFFFFF", relief="flat", padx=8
+).pack(side="right", padx=5, pady=3)
+
+busqueda_var.trace_add("write", actualizar_busqueda)
+busqueda_entrada.bind(
+    "<Return>", lambda event: buscar_siguiente(1)
+)
+busqueda_entrada.bind(
+    "<Shift-Return>", lambda event: buscar_siguiente(-1)
+)
+busqueda_entrada.bind(
+    "<Escape>", lambda event: (cerrar_busqueda(), "break")[1]
+)
+
 # Contenedor para barra de línea + editor
 frame_editor = tk.Frame(root)
 frame_editor.pack(fill="both", expand=True, padx=5, pady=5)
@@ -3984,8 +4149,13 @@ actualizar_lineas()
 def resaltar(event=None):
     contenido = editor.get("1.0", tk.END)
 
-    # Borrar formatos previos
-    for tag in editor.tag_names():
+    # Limpiar solo las etiquetas de sintaxis.
+    # Las etiquetas de búsqueda son independientes.
+    for tag in (
+        "comment", "string", "keyword", "preprocessor",
+        "function", "number", "type", "operator", "constant",
+        "boolean", "namespace", "macro", "todo"
+    ):
         editor.tag_remove(tag, "1.0", tk.END)
 
     # --- Palabras clave de C/C++ ---
@@ -4041,6 +4211,8 @@ def resaltar(event=None):
             end = f"1.0 + {match.end()} chars"
             editor.tag_add(tag, start, end)
 
+    actualizar_busqueda()
+
 # --- Configuración de colores y estilos neón ---
 editor.tag_config("keyword", foreground="#82AAFF", font=("Consolas", 12, ))        # azul intenso
 editor.tag_config("preprocessor", foreground="#C792EA", font=("Consolas", 12, ))   # púrpura neón
@@ -4056,7 +4228,23 @@ editor.tag_config("constant", foreground="#D8A0DF", font=("Consolas", 12, ))    
 editor.tag_config("boolean", foreground="#88C0D0", font=("Consolas", 12, ))        # true / false
 editor.tag_config("namespace", foreground="#EBCB8B", font=("Consolas", 12, "italic"))    # nombres de espacio
 editor.tag_config("macro", foreground="#C792EA", font=("Consolas", 12, ))          # macros #define
-editor.tag_config("todo", foreground="#F07178", font=("Consolas", 12, ))           # comentarios
+editor.tag_config("todo", foreground="#F07178", font=("Consolas", 12, ))
+# --- Colores del buscador ---
+editor.tag_config(
+    "search_match",
+    background="#F6D365",
+    foreground="#202020"
+)
+editor.tag_config(
+    "search_current",
+    background="#FF9F43",
+    foreground="#181C24",
+    underline=True
+)
+editor.tag_raise("search_match")
+editor.tag_raise("search_current")
+actualizar_busqueda()
+           # comentarios
 
 
 
@@ -4251,6 +4439,9 @@ root.bind("<F6>", lambda e: root.after_idle(compilar))
 root.bind("<F7>", lambda e: root.after_idle(debug))
 root.bind("<F8>", lambda e: root.after_idle(ejecutar))
 editor.bind("<KeyRelease>", resaltar)
+
+root.bind("<Control-f>", abrir_busqueda)
+root.bind("<Control-F>", abrir_busqueda)
 
 # --- CENTRAR VENTANA ---
 root.update_idletasks()
