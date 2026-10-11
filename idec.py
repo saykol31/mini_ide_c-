@@ -4567,7 +4567,6 @@ root.bind("<F5>", lambda e: root.after_idle(build))
 root.bind("<F6>", lambda e: root.after_idle(compilar))
 root.bind("<F7>", lambda e: root.after_idle(debug))
 root.bind("<F8>", lambda e: root.after_idle(ejecutar))
-editor.bind("<KeyRelease>", resaltar)
 editor.bind("<KeyRelease>", actualizar_linea_cursor, add="+")
 editor.bind("<Button-1>", actualizar_linea_cursor, add="+")
 for evento_edicion in ("<<Paste>>", "<<Cut>>", "<<Undo>>", "<<Redo>>"):
