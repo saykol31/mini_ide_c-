@@ -30,13 +30,13 @@ ultimo_archivo = None
 # --- COLORES ---
 COLOR_ROSA       = "#FF69B4"
 COLOR_DORADO_OSC = "#DAA520"
-COLOR_NARANJA    = "#FFA500"
+COLOR_NARANJA    = "#303846"
 COLOR_VERDE_LIMA = "#32CD32"
 COLOR_AZUL_DODGE = "#1E90FF"
 COLOR_PURPURA    = "#8A2BE2"
 COLOR_TURQUESA   = "#00CED1"
 COLOR_DORADO     = "#FFD700"
-COLOR_ROJO       = "#FF0000"
+COLOR_ROJO       = "#49313A"
 
 # -------Definir Variables
 
@@ -45,7 +45,7 @@ root = tk.Tk()
 frame_consola = tk.Frame(root)
 root.title("Mini IDE para C/C++")
 root.geometry("900x850")
-root.config(bg="#E6E6FA")
+root.config(bg="#181C24")
 
 # ---------------- FUNCIONES ---------------- #
 
@@ -3892,7 +3892,7 @@ refs_imgs = []
 
 
 # --- Barra superior ---
-frame_superior = tk.Frame(root, bg="#E6E6FA")
+frame_superior = tk.Frame(root, bg="#181C24")
 frame_superior.pack(side="top", fill="x", pady=5)
 #  - -  -  -  -  -  -  -("Nombre del boton", enlace a la funcion , color del boton , "nombre del icono"),
 botones_superior = [
@@ -3915,11 +3915,11 @@ for texto, comando, color, icono_nombre in botones_superior:
         image=img,
         compound="top",
         bg=color,
-        fg="black",
-        activebackground="#FFD700",  # fondo al presionar
-        activeforeground="black",    # texto al presionar
-        relief="raised",              # efecto elevado
-        bd=4,                         # grosor del borde
+        fg="#D8DEE9",
+        activebackground="#405064",  # fondo al presionar
+        activeforeground="#FFFFFF",    # texto al presionar
+        relief="flat",              # efecto elevado
+        bd=0,                         # grosor del borde
         padx=4,
         pady=4,
         highlightthickness=0,
@@ -3949,7 +3949,7 @@ frame_editor.pack(fill="both", expand=True, padx=5, pady=5)
 
 # --- Barra de números de línea ---
 lineas = tk.Text(frame_editor, width=4, padx=3, takefocus=0, border=0,
-                 background="#DDDDDD", state="disabled", wrap="none")
+                 background="#202631", foreground="#8391A5", state="disabled", wrap="none")
 lineas.pack(side="left", fill="y")
 
 
@@ -3966,7 +3966,7 @@ scroll_hor.pack(side="bottom", fill="x")
 
 #------AREA DE TRABAJO-----
 
-editor = tk.Text(frame_editor, wrap="none", background="#FFFFFF",yscrollcommand=scroll_vert.set, xscrollcommand=scroll_hor.set, font=("Courier", 12), undo=True)
+editor = tk.Text(frame_editor, wrap="none", background="#1E232D", foreground="#D8DEE9", insertbackground="#4DE3C1", selectbackground="#354457", selectforeground="#FFFFFF", yscrollcommand=scroll_vert.set, xscrollcommand=scroll_hor.set, font=("Consolas", 12), undo=True)
 editor.pack(side="left", fill="both", expand=True)
 
 # --- Scroll sincronizado entre editor y números de línea ---
@@ -4095,26 +4095,26 @@ def resaltar(event=None):
             editor.tag_add(tag, start, end)
 
 # --- Configuración de colores y estilos neón ---
-editor.tag_config("keyword", foreground="#0000FF", font=("Consolas", 12, ))        # azul intenso
-editor.tag_config("preprocessor", foreground="#BF00FF", font=("Consolas", 12, ))   # púrpura neón
-editor.tag_config("string", foreground="#C833FF", font=("Consolas", 12, "italic"))       # lila neón
-editor.tag_config("comment", foreground="#008000", font=("Consolas", 12, "italic"))      # verde intenso
-editor.tag_config("function", foreground="#C833FF", font=("Consolas", 12, "underline"))  #  rosado
-editor.tag_config("number", foreground="#FF3131", font=("Consolas", 12, ))         # rojo neón
+editor.tag_config("keyword", foreground="#82AAFF", font=("Consolas", 12, ))        # azul intenso
+editor.tag_config("preprocessor", foreground="#C792EA", font=("Consolas", 12, ))   # púrpura neón
+editor.tag_config("string", foreground="#C792EA", font=("Consolas", 12, "italic"))       # lila neón
+editor.tag_config("comment", foreground="#7FBC8C", font=("Consolas", 12, "italic"))      # verde intenso
+editor.tag_config("function", foreground="#4DE3C1", font=("Consolas", 12, "underline"))  #  rosado
+editor.tag_config("number", foreground="#F78C6C", font=("Consolas", 12, ))         # rojo neón
 
 # --- Opcionales adicionales para resaltado avanzado ---
-editor.tag_config("type", foreground="#00FF9F", font=("Consolas", 12, ))           # tipos de datos
-editor.tag_config("operator", foreground="#FFFF00", font=("Consolas", 12, ))       # operadores
-editor.tag_config("constant", foreground="#FF00FF", font=("Consolas", 12, ))       # constantes
-editor.tag_config("boolean", foreground="#00FFFF", font=("Consolas", 12, ))        # true / false
-editor.tag_config("namespace", foreground="#FFA500", font=("Consolas", 12, "italic"))    # nombres de espacio
-editor.tag_config("macro", foreground="#BF00FF", font=("Consolas", 12, ))          # macros #define
-editor.tag_config("todo", foreground="#FF1493", font=("Consolas", 12, ))           # comentarios
+editor.tag_config("type", foreground="#4DE3C1", font=("Consolas", 12, ))           # tipos de datos
+editor.tag_config("operator", foreground="#EBCB8B", font=("Consolas", 12, ))       # operadores
+editor.tag_config("constant", foreground="#D8A0DF", font=("Consolas", 12, ))       # constantes
+editor.tag_config("boolean", foreground="#88C0D0", font=("Consolas", 12, ))        # true / false
+editor.tag_config("namespace", foreground="#EBCB8B", font=("Consolas", 12, "italic"))    # nombres de espacio
+editor.tag_config("macro", foreground="#C792EA", font=("Consolas", 12, ))          # macros #define
+editor.tag_config("todo", foreground="#F07178", font=("Consolas", 12, ))           # comentarios
 
 
 
 # --- Barra inferior ---
-frame_inferior = tk.Frame(root, bg="#E6E6FA")
+frame_inferior = tk.Frame(root, bg="#181C24")
 frame_inferior.pack(side="bottom", fill="x", pady=5)
 
 #  - -  -  -  -  -  -  -("Nombre del boton", enlace a la funcion , color del boton , "nombre del icono"),
@@ -4136,11 +4136,11 @@ for texto, comando, color, icono_nombre in botones_inferior:
         image=img,
         compound="top",
         bg=color,
-        fg="black",
-        activebackground="#FFD700",  # fondo al presionar
-        activeforeground="black",    # texto al presionar
-        relief="raised",              # efecto elevado
-        bd=4,                         # grosor del borde
+        fg="#D8DEE9",
+        activebackground="#405064",  # fondo al presionar
+        activeforeground="#FFFFFF",    # texto al presionar
+        relief="flat",              # efecto elevado
+        bd=0,                         # grosor del borde
         padx=4,
         pady=4,
         highlightthickness=0,
@@ -4168,10 +4168,10 @@ btn_weston = tk.Button(
     frame_inferior,
     text="Weston",
     command=abrir_weston_y_bgfx,
-    bg="#4682B4",
-    fg="white",
+    bg="#303846",
+    fg="#D8DEE9",
     font=("Arial", 12, "bold"),
-    relief="raised",
+    relief="flat",
     padx=10,
     pady=5
 )
@@ -4186,13 +4186,13 @@ btn_glad = tk.Button(
     frame_inferior,
     text="GLAD",
     command=glad,
-    bg="#4682B4",
-    fg="white",
-    activebackground="#FFD700",
-    activeforeground="black",
+    bg="#303846",
+    fg="#D8DEE9",
+    activebackground="#405064",
+    activeforeground="#FFFFFF",
     font=("Arial", 10, "bold"),
-    relief="raised",
-    bd=4,
+    relief="flat",
+    bd=0,
     padx=10,
     pady=5
 )
@@ -4212,10 +4212,10 @@ btn_bgfx = tk.Button(
     frame_inferior,
     text="BGFX",
     command=ejecutar_bgfx,
-    bg="#4682B4",
-    fg="white",
+    bg="#303846",
+    fg="#D8DEE9",
     font=("Arial", 10, "bold"),
-    relief="raised",
+    relief="flat",
     padx=5,
     pady=5
 )
@@ -4228,7 +4228,7 @@ btn_bgfx.pack(side="right", padx=3)
 frame_consola.pack(fill="both", side="bottom", padx=5, pady=5, expand=True)
 
 # Text con scroll
-consola = tk.Text(frame_consola, height=10, bg="black", fg="white", font=("Courier", 12),
+consola = tk.Text(frame_consola, height=10, bg="#0D1117", fg="#D8DEE9", font=("Consolas", 11),
                   state="disabled", wrap="none")
 consola.pack(side="left", fill="both", expand=True)
 
@@ -4238,11 +4238,11 @@ scroll_consola.pack(side="right", fill="y")
 consola.config(yscrollcommand=scroll_consola.set)
 
 # Tags para colores ANSI
-consola.tag_config("verde", foreground="#00FF00")
-consola.tag_config("rojo", foreground="#FF0000")
-consola.tag_config("amarillo", foreground="#FFFF00")
-consola.tag_config("azul", foreground="#00BFFF")
-consola.tag_config("magenta", foreground="#FF00FF")
+consola.tag_config("verde", foreground="#7FBC8C")
+consola.tag_config("rojo", foreground="#F07178")
+consola.tag_config("amarillo", foreground="#EBCB8B")
+consola.tag_config("azul", foreground="#82AAFF")
+consola.tag_config("magenta", foreground="#C792EA")
 
 # Función para imprimir en la consola
 
