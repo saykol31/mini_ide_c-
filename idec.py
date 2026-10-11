@@ -450,8 +450,12 @@ def limpiar_area():
     lineas.config(state="normal")
     lineas.delete("1.0", tk.END)
     lineas.config(state="disabled")
+    lineas.yview_moveto(editor.yview()[0])
 
     ultimo_archivo = None
+
+    # Restablecer numeración del gutter tras limpiar el editor
+    editor.after_idle(actualizar_lineas)
     messagebox.showinfo("Limpiar", "Área de edición vacía.")
 
 
@@ -3953,6 +3957,7 @@ def actualizar_lineas(event=None):
     numeros = "\n".join(str(i) for i in range(1, num_lineas+1))
     lineas.insert("1.0", numeros)
     lineas.config(state="disabled")
+    lineas.yview_moveto(editor.yview()[0])
 
 # --- Auto-indent + actualizar líneas correctamente ---
 def on_return(event):
