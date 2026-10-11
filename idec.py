@@ -565,9 +565,6 @@ def generar_cmakelists(
         - mantiene C++
     """
 
-    import os
-    import re
-    from tkinter import messagebox
 
     # ========================================================
     # ESTRUCTURAS
@@ -2017,10 +2014,10 @@ def build():
 
             if not os.path.exists(cmakelists_path):
                 if 'print_consola' in globals():
-                    print_consola("\033[1;33m⚠️ No existe CMakeLists.txt, generando...\033[0m")
+                    _ui_print_consola("\033[1;33m⚠️ No existe CMakeLists.txt, generando...\033[0m")
                 ok = generar_cmakelists(ruta_proyecto=ruta, nombre_proyecto=nombre_proyecto)
                 if not ok:
-                    messagebox.showerror("Error", "No se pudo generar CMakeLists.txt.")
+                    _ui_messagebox("showerror", "Error", "No se pudo generar CMakeLists.txt.")
                     return
 
             # Detectar si es un proyecto BGFX buscando "include/bgfx" en CMakeLists
@@ -2031,30 +2028,26 @@ def build():
 
             # Configurar CMake
             cmd_configure = f"cmake -S {shlex.quote(ruta)} -B {shlex.quote(build_dir)}"
-            print_consola(f"\033[1;34m▶ {cmd_configure}\033[0m")
-            p1 = subprocess.Popen(cmd_configure, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=ruta)
+            _ui_print_consola(f"\033[1;34m▶ {cmd_configure}\033[0m")
+            p1 = subprocess.Popen(cmd_configure, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=ruta)
             for line in p1.stdout:
-                print_consola(line.rstrip())
-            for line in p1.stderr:
-                print_consola(line.rstrip())
+                _ui_print_consola(line.rstrip())
             p1.wait()
             if p1.returncode != 0:
-                print_consola("\033[1;31m❌ Error en configuración CMake.\033[0m")
-                messagebox.showerror("Build", "❌ Error en configuración CMake")
+                _ui_print_consola("\033[1;31m❌ Error en configuración CMake.\033[0m")
+                _ui_messagebox("showerror", "Build", "❌ Error en configuración CMake")
                 return
 
             # Compilar con CMake
             cmd_build = f"cmake --build {shlex.quote(build_dir)} --parallel"
-            print_consola(f"\033[1;34m▶ {cmd_build}\033[0m")
-            p2 = subprocess.Popen(cmd_build, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=ruta)
+            _ui_print_consola(f"\033[1;34m▶ {cmd_build}\033[0m")
+            p2 = subprocess.Popen(cmd_build, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=ruta)
             for line in p2.stdout:
-                print_consola(line.rstrip())
-            for line in p2.stderr:
-                print_consola(line.rstrip())
+                _ui_print_consola(line.rstrip())
             p2.wait()
             if p2.returncode != 0:
-                print_consola("\033[1;31m❌ Error en compilación.\033[0m")
-                messagebox.showerror("Build", "❌ Error en compilación")
+                _ui_print_consola("\033[1;31m❌ Error en compilación.\033[0m")
+                _ui_messagebox("showerror", "Build", "❌ Error en compilación")
                 return
 
             # Todos los ejecutables de IDEC deben estar en bin/.
@@ -2065,15 +2058,15 @@ def build():
             bin_path = os.path.join(bin_dir, nombre_objetivo)
 
             if os.path.isfile(bin_path):
-                print_consola(f"\033[1;32m✅ Build completado. Binario: {bin_path}\033[0m")
-                messagebox.showinfo("Build", f"✅ Build completado.\nBinario:\n{bin_path}")
+                _ui_print_consola(f"\033[1;32m✅ Build completado. Binario: {bin_path}\033[0m")
+                _ui_messagebox("showinfo", "Build", f"✅ Build completado.\nBinario:\n{bin_path}")
             else:
-                print_consola("\033[1;33m⚠️ Build completado, pero no se encontró el binario esperado.\033[0m")
-                messagebox.showwarning("Build", "⚠️ Build completado, pero no se encontró el binario esperado.")
+                _ui_print_consola("\033[1;33m⚠️ Build completado, pero no se encontró el binario esperado.\033[0m")
+                _ui_messagebox("showwarning", "Build", "⚠️ Build completado, pero no se encontró el binario esperado.")
 
         except Exception as e:
-            print_consola(f"\033[1;31m❌ Excepción en build: {e}\033[0m")
-            messagebox.showerror("Build", f"❌ Excepción en build:\n{e}")
+            _ui_print_consola(f"\033[1;31m❌ Excepción en build: {e}\033[0m")
+            _ui_messagebox("showerror", "Build", f"❌ Excepción en build:\n{e}")
 
     threading.Thread(target=_run, daemon=True).start()
 
@@ -2081,13 +2074,6 @@ def build():
 
 ###################  COMPILAR  #######################
 
-import os
-import shlex
-import subprocess
-import threading
-import re
-import tkinter as tk
-from tkinter import messagebox
 
 
 # ============================================================
@@ -2879,7 +2865,7 @@ def compilar():
 
     def run_compile():
 
-        print_consola(
+        _ui_print_consola(
             f"\033[1;34m"
             f"Compilando:\n{cmd}"
             f"\033[0m"
@@ -2896,7 +2882,7 @@ def compilar():
 
                 stdout=subprocess.PIPE,
 
-                stderr=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
 
                 cwd=ruta_proyecto,
 
@@ -2913,7 +2899,7 @@ def compilar():
 
             for linea in proceso.stdout:
 
-                print_consola(
+                _ui_print_consola(
                     linea.rstrip()
                 )
 
@@ -2922,11 +2908,6 @@ def compilar():
             # STDERR
             # ------------------------------------------------
 
-            for linea in proceso.stderr:
-
-                print_consola(
-                    linea.rstrip()
-                )
 
 
             proceso.wait()
@@ -2938,7 +2919,7 @@ def compilar():
 
             if proceso.returncode == 0:
 
-                print_consola(
+                _ui_print_consola(
                     "\033[1;32m"
                     "================================================\n"
                     "✅ COMPILACIÓN EXITOSA\n"
@@ -2950,7 +2931,7 @@ def compilar():
 
             else:
 
-                print_consola(
+                _ui_print_consola(
                     "\033[1;31m"
                     "================================================\n"
                     "❌ ERROR DE COMPILACIÓN\n"
@@ -2961,7 +2942,7 @@ def compilar():
 
         except Exception as e:
 
-            print_consola(
+            _ui_print_consola(
                 "\033[1;31m"
                 f"❌ Error ejecutando compilador: {e}"
                 "\033[0m"
@@ -3012,90 +2993,88 @@ def depurar():
     cmd_compile = f"{compilador} -g {shlex.quote(ultimo_archivo)} -o {shlex.quote(salida)} {libs}"
 
     def run_debug():
-        print_consola(f"\033[1;34mCompilando para depuración: {cmd_compile}\033[0m")
+        _ui_print_consola(f"\033[1;34mCompilando para depuración: {cmd_compile}\033[0m")
         proceso = subprocess.Popen(
             cmd_compile,
             shell=True,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             cwd=ruta_proyecto,
             text=True
         )
 
         # Mostrar salida de compilación
         for linea in proceso.stdout:
-            print_consola(linea.rstrip())
-        for linea in proceso.stderr:
-            print_consola(linea.rstrip())
+            _ui_print_consola(linea.rstrip())
 
         proceso.wait()
         if proceso.returncode != 0:
-            print_consola("\033[1;31m❌ Error de compilación para depuración\033[0m")
+            _ui_print_consola("\033[1;31m❌ Error de compilación para depuración\033[0m")
             return
 
         # ✅ Compilación exitosa
-        print_consola(f"\033[1;32m✅ Compilación exitosa.\033[0m")
-        print_consola(f"\033[1;33m⚡ Abriendo GDB en una konsole real...\033[0m")
-        print_consola("\033[34m##################  DEPURAR  ########################\033[0m")
+        _ui_print_consola(f"\033[1;32m✅ Compilación exitosa.\033[0m")
+        _ui_print_consola(f"\033[1;33m⚡ Abriendo GDB en una konsole real...\033[0m")
+        _ui_print_consola("\033[34m##################  DEPURAR  ########################\033[0m")
 
         # === Nivel 1: Comandos básicos ===
-        print_consola("\033[36m📘 NIVEL 1: COMANDOS BÁSICOS\033[0m")
-        print_consola("\033[34m---------------------------------------------------\033[0m")
-        print_consola("\033[34mrun (r)\033[0m              \033[32m| Ejecutar el programa desde inicio\033[0m")
-        print_consola("\033[34mbreak (b) <n>\033[0m        \033[32m| Poner breakpoint en línea <n>\033[0m")
-        print_consola("\033[34mbreak <func>\033[0m         \033[32m| Poner breakpoint en función <func>\033[0m")
-        print_consola("\033[34minfo breakpoints\033[0m     \033[32m| Ver breakpoints activos\033[0m")
-        print_consola("\033[34mdelete <n>\033[0m           \033[32m| Borrar breakpoint <n>\033[0m")
-        print_consola("\033[34mnext (n)\033[0m             \033[32m| Ejecutar línea (sin entrar en funciones)\033[0m")
-        print_consola("\033[34mstep (s)\033[0m             \033[32m| Entrar en la función\033[0m")
-        print_consola("\033[34mcontinue (c)\033[0m         \033[32m| Continuar hasta el próximo breakpoint\033[0m")
-        print_consola("\033[34mprint (p) <var>\033[0m      \033[32m| Mostrar valor de variable\033[0m")
-        print_consola("\033[34mlist (l)\033[0m             \033[32m| Ver código fuente cercano\033[0m")
-        print_consola("\033[34mbacktrace (bt)\033[0m       \033[32m| Ver pila de llamadas\033[0m")
-        print_consola("\033[34mquit (q)\033[0m             \033[32m| Salir de GDB\033[0m")
-        print_consola("\033[34m---------------------------------------------------\033[0m")
+        _ui_print_consola("\033[36m📘 NIVEL 1: COMANDOS BÁSICOS\033[0m")
+        _ui_print_consola("\033[34m---------------------------------------------------\033[0m")
+        _ui_print_consola("\033[34mrun (r)\033[0m              \033[32m| Ejecutar el programa desde inicio\033[0m")
+        _ui_print_consola("\033[34mbreak (b) <n>\033[0m        \033[32m| Poner breakpoint en línea <n>\033[0m")
+        _ui_print_consola("\033[34mbreak <func>\033[0m         \033[32m| Poner breakpoint en función <func>\033[0m")
+        _ui_print_consola("\033[34minfo breakpoints\033[0m     \033[32m| Ver breakpoints activos\033[0m")
+        _ui_print_consola("\033[34mdelete <n>\033[0m           \033[32m| Borrar breakpoint <n>\033[0m")
+        _ui_print_consola("\033[34mnext (n)\033[0m             \033[32m| Ejecutar línea (sin entrar en funciones)\033[0m")
+        _ui_print_consola("\033[34mstep (s)\033[0m             \033[32m| Entrar en la función\033[0m")
+        _ui_print_consola("\033[34mcontinue (c)\033[0m         \033[32m| Continuar hasta el próximo breakpoint\033[0m")
+        _ui_print_consola("\033[34mprint (p) <var>\033[0m      \033[32m| Mostrar valor de variable\033[0m")
+        _ui_print_consola("\033[34mlist (l)\033[0m             \033[32m| Ver código fuente cercano\033[0m")
+        _ui_print_consola("\033[34mbacktrace (bt)\033[0m       \033[32m| Ver pila de llamadas\033[0m")
+        _ui_print_consola("\033[34mquit (q)\033[0m             \033[32m| Salir de GDB\033[0m")
+        _ui_print_consola("\033[34m---------------------------------------------------\033[0m")
 
         # === Nivel 2: Comandos intermedios ===
-        print_consola("\033[33m📗 NIVEL 2: COMANDOS INTERMEDIOS\033[0m")
-        print_consola("\033[34m---------------------------------------------------\033[0m")
-        print_consola("\033[34mwatch <var>\033[0m          \033[32m| Vigilar variable y detener si cambia\033[0m")
-        print_consola("\033[34mdisplay <expr>\033[0m       \033[32m| Mostrar expresión en cada paso\033[0m")
-        print_consola("\033[34mundisplay <n>\033[0m        \033[32m| Quitar visualización automática\033[0m")
-        print_consola("\033[34mdisable <bp#>\033[0m        \033[32m| Desactivar breakpoint sin borrarlo\033[0m")
-        print_consola("\033[34menable <bp#>\033[0m         \033[32m| Reactivar breakpoint\033[0m")
-        print_consola("\033[34minfo locals\033[0m          \033[32m| Variables locales de la función actual\033[0m")
-        print_consola("\033[34minfo args\033[0m            \033[32m| Argumentos de la función actual\033[0m")
-        print_consola("\033[34minfo registers\033[0m       \033[32m| Ver registros CPU\033[0m")
-        print_consola("\033[34mset var x=valor\033[0m      \033[32m| Cambiar el valor de una variable\033[0m")
-        print_consola("\033[34mx/<fmt> <addr>\033[0m       \033[32m| Examinar memoria (ej: x/16xb ptr)\033[0m")
-        print_consola("\033[34mdisassemble\033[0m          \033[32m| Ver el código ensamblador\033[0m")
-        print_consola("\033[34mthread <id>\033[0m          \033[32m| Cambiar a hilo específico\033[0m")
-        print_consola("\033[34minfo threads\033[0m         \033[32m| Listar hilos activos\033[0m")
-        print_consola("\033[34m---------------------------------------------------\033[0m")
+        _ui_print_consola("\033[33m📗 NIVEL 2: COMANDOS INTERMEDIOS\033[0m")
+        _ui_print_consola("\033[34m---------------------------------------------------\033[0m")
+        _ui_print_consola("\033[34mwatch <var>\033[0m          \033[32m| Vigilar variable y detener si cambia\033[0m")
+        _ui_print_consola("\033[34mdisplay <expr>\033[0m       \033[32m| Mostrar expresión en cada paso\033[0m")
+        _ui_print_consola("\033[34mundisplay <n>\033[0m        \033[32m| Quitar visualización automática\033[0m")
+        _ui_print_consola("\033[34mdisable <bp#>\033[0m        \033[32m| Desactivar breakpoint sin borrarlo\033[0m")
+        _ui_print_consola("\033[34menable <bp#>\033[0m         \033[32m| Reactivar breakpoint\033[0m")
+        _ui_print_consola("\033[34minfo locals\033[0m          \033[32m| Variables locales de la función actual\033[0m")
+        _ui_print_consola("\033[34minfo args\033[0m            \033[32m| Argumentos de la función actual\033[0m")
+        _ui_print_consola("\033[34minfo registers\033[0m       \033[32m| Ver registros CPU\033[0m")
+        _ui_print_consola("\033[34mset var x=valor\033[0m      \033[32m| Cambiar el valor de una variable\033[0m")
+        _ui_print_consola("\033[34mx/<fmt> <addr>\033[0m       \033[32m| Examinar memoria (ej: x/16xb ptr)\033[0m")
+        _ui_print_consola("\033[34mdisassemble\033[0m          \033[32m| Ver el código ensamblador\033[0m")
+        _ui_print_consola("\033[34mthread <id>\033[0m          \033[32m| Cambiar a hilo específico\033[0m")
+        _ui_print_consola("\033[34minfo threads\033[0m         \033[32m| Listar hilos activos\033[0m")
+        _ui_print_consola("\033[34m---------------------------------------------------\033[0m")
 
         # === Nivel 3: Comandos expertos ===
-        print_consola("\033[31m📙 NIVEL 3: COMANDOS EXPERTOS\033[0m")  # 31 = rojo (aprox. naranja)
-        print_consola("\033[34m---------------------------------------------------\033[0m")
-        print_consola("\033[34mattach <pid>\033[0m         \033[32m| Adjuntar GDB a un proceso en ejecución\033[0m")
-        print_consola("\033[34mdetach\033[0m               \033[32m| Soltar proceso adjuntado\033[0m")
-        print_consola("\033[34mcore <archivo>\033[0m       \033[32m| Analizar un volcado core\033[0m")
-        print_consola("\033[34minfo sharedlibrary\033[0m   \033[32m| Ver librerías dinámicas cargadas\033[0m")
-        print_consola("\033[34minfo functions\033[0m       \033[32m| Listar todas las funciones disponibles\033[0m")
-        print_consola("\033[34minfo variables\033[0m       \033[32m| Listar todas las variables globales\033[0m")
-        print_consola("\033[34mcatch <evento>\033[0m       \033[32m| Detenerse en eventos (ej: throw, exec)\033[0m")
-        print_consola("\033[34mhandle <señal> act\033[0m   \033[32m| Controlar señales (ej: SIGSEGV, SIGINT)\033[0m")
-        print_consola("\033[34mtui enable\033[0m           \033[32m| Activar interfaz visual (split código/estado)\033[0m")
-        print_consola("\033[34mlayout asm/src\033[0m       \033[32m| Cambiar vista en TUI (asm, src, regs)\033[0m")
-        print_consola("\033[34msave gdb <archivo>\033[0m   \033[32m| Guardar sesión y breakpoints\033[0m")
-        print_consola("\033[34msource <archivo>\033[0m     \033[32m| Cargar script de comandos GDB\033[0m")
-        print_consola("\033[34mdefine <cmd>\033[0m         \033[32m| Crear macro/comando personalizado\033[0m")
-        print_consola("\033[34mshell <cmd>\033[0m          \033[32m| Ejecutar comandos de sistema dentro de GDB\033[0m")
-        print_consola("\033[34mrecord\033[0m               \033[32m| Grabar la ejecución paso a paso (replay)\033[0m")
-        print_consola("\033[34mreverse-step (rs)\033[0m    \033[32m| Ir hacia atrás en el debug (requiere record)\033[0m")
-        print_consola("\033[34mreverse-continue (rc)\033[0m\033[32m| Continuar hacia atrás en el tiempo\033[0m")
-        print_consola("\033[34m---------------------------------------------------\033[0m")
+        _ui_print_consola("\033[31m📙 NIVEL 3: COMANDOS EXPERTOS\033[0m")  # 31 = rojo (aprox. naranja)
+        _ui_print_consola("\033[34m---------------------------------------------------\033[0m")
+        _ui_print_consola("\033[34mattach <pid>\033[0m         \033[32m| Adjuntar GDB a un proceso en ejecución\033[0m")
+        _ui_print_consola("\033[34mdetach\033[0m               \033[32m| Soltar proceso adjuntado\033[0m")
+        _ui_print_consola("\033[34mcore <archivo>\033[0m       \033[32m| Analizar un volcado core\033[0m")
+        _ui_print_consola("\033[34minfo sharedlibrary\033[0m   \033[32m| Ver librerías dinámicas cargadas\033[0m")
+        _ui_print_consola("\033[34minfo functions\033[0m       \033[32m| Listar todas las funciones disponibles\033[0m")
+        _ui_print_consola("\033[34minfo variables\033[0m       \033[32m| Listar todas las variables globales\033[0m")
+        _ui_print_consola("\033[34mcatch <evento>\033[0m       \033[32m| Detenerse en eventos (ej: throw, exec)\033[0m")
+        _ui_print_consola("\033[34mhandle <señal> act\033[0m   \033[32m| Controlar señales (ej: SIGSEGV, SIGINT)\033[0m")
+        _ui_print_consola("\033[34mtui enable\033[0m           \033[32m| Activar interfaz visual (split código/estado)\033[0m")
+        _ui_print_consola("\033[34mlayout asm/src\033[0m       \033[32m| Cambiar vista en TUI (asm, src, regs)\033[0m")
+        _ui_print_consola("\033[34msave gdb <archivo>\033[0m   \033[32m| Guardar sesión y breakpoints\033[0m")
+        _ui_print_consola("\033[34msource <archivo>\033[0m     \033[32m| Cargar script de comandos GDB\033[0m")
+        _ui_print_consola("\033[34mdefine <cmd>\033[0m         \033[32m| Crear macro/comando personalizado\033[0m")
+        _ui_print_consola("\033[34mshell <cmd>\033[0m          \033[32m| Ejecutar comandos de sistema dentro de GDB\033[0m")
+        _ui_print_consola("\033[34mrecord\033[0m               \033[32m| Grabar la ejecución paso a paso (replay)\033[0m")
+        _ui_print_consola("\033[34mreverse-step (rs)\033[0m    \033[32m| Ir hacia atrás en el debug (requiere record)\033[0m")
+        _ui_print_consola("\033[34mreverse-continue (rc)\033[0m\033[32m| Continuar hacia atrás en el tiempo\033[0m")
+        _ui_print_consola("\033[34m---------------------------------------------------\033[0m")
 
-        print_consola("\033[34m⚡ Usa NIVEL 1 para empezar, NIVEL 2 para diagnóstico, y NIVEL 3 cuando quieras control quirúrgico total.\033[0m")
+        _ui_print_consola("\033[34m⚡ Usa NIVEL 1 para empezar, NIVEL 2 para diagnóstico, y NIVEL 3 cuando quieras control quirúrgico total.\033[0m")
 
         # Lanzar konsole real con GDB
         bash_cmd = f"gdb {shlex.quote(salida)}"
@@ -3235,10 +3214,7 @@ def glad():
     El comando se ejecuta con cwd=ruta_proyecto.
     """
 
-    import os
     import shutil
-    import subprocess
-    from tkinter import messagebox
 
     # ============================================================
     # VERIFICAR ARCHIVO ACTUAL
@@ -3450,243 +3426,182 @@ def glad():
 
 
     # ============================================================
-    # EJECUTAR GLAD
+    # EJECUTAR GLAD EN SEGUNDO PLANO
     # ============================================================
 
-    try:
+    def _ejecutar_glad():
+        proceso = None
 
-        proceso = subprocess.Popen(
-            comando,
-            cwd=ruta_proyecto,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1
-        )
+        try:
+            proceso = subprocess.Popen(
+                comando,
+                cwd=ruta_proyecto,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1
+            )
 
-        # --------------------------------------------------------
-        # MOSTRAR SALIDA EN TIEMPO REAL
-        # --------------------------------------------------------
+            if proceso.stdout is not None:
+                for linea in proceso.stdout:
+                    linea = linea.rstrip()
+                    if linea:
+                        _ui_print_consola(linea)
 
-        for linea in proceso.stdout:
+            codigo_salida = proceso.wait()
 
-            linea = linea.rstrip()
-
-            if not linea:
-                continue
-
-            if 'print_consola' in globals():
-
-                print_consola(
-                    linea
-                )
-
-        proceso.wait()
-
-
-    except FileNotFoundError:
-
-        messagebox.showerror(
-            "GLAD",
-            "No se pudo ejecutar el comando 'glad'."
-        )
-
-        if 'print_consola' in globals():
-
-            print_consola(
+        except FileNotFoundError:
+            _ui_print_consola(
                 "\033[1;31m"
                 "❌ No se pudo ejecutar GLAD."
                 "\033[0m"
             )
+            _ui_messagebox(
+                "showerror",
+                "GLAD",
+                "No se pudo ejecutar el comando 'glad'."
+            )
+            return
 
-        return False
+        except Exception as e:
+            if proceso is not None and proceso.poll() is None:
+                proceso.terminate()
+                try:
+                    proceso.wait(timeout=3)
+                except Exception:
+                    proceso.kill()
+                    proceso.wait()
 
-
-    except Exception as e:
-
-        messagebox.showerror(
-            "Error GLAD",
-            f"Error ejecutando GLAD:\n\n{e}"
-        )
-
-        if 'print_consola' in globals():
-
-            print_consola(
+            _ui_print_consola(
                 "\033[1;31m"
                 f"❌ Error ejecutando GLAD: {e}"
                 "\033[0m"
             )
+            _ui_messagebox(
+                "showerror",
+                "Error GLAD",
+                f"Error ejecutando GLAD:\n\n{e}"
+            )
+            return
 
-        return False
+        finally:
+            if proceso is not None and proceso.stdout is not None:
+                proceso.stdout.close()
 
+        # --------------------------------------------------------
+        # COMPROBAR CÓDIGO DE SALIDA
+        # --------------------------------------------------------
 
-    # ============================================================
-    # COMPROBAR RESULTADO
-    # ============================================================
-
-    if proceso.returncode != 0:
-
-        messagebox.showerror(
-            "GLAD",
-            "GLAD terminó con errores.\n\n"
-            f"Código de salida: {proceso.returncode}\n\n"
-            "Revisa la consola de la IDE."
-        )
-
-        if 'print_consola' in globals():
-
-            print_consola(
+        if codigo_salida != 0:
+            _ui_print_consola(
                 "\033[1;31m"
-                f"❌ GLAD terminó con código "
-                f"{proceso.returncode}"
+                f"❌ GLAD terminó con código {codigo_salida}"
                 "\033[0m"
             )
-
-        return False
-
-
-    # ============================================================
-    # ARCHIVOS GENERADOS POR GLAD MODERNO
-    # ============================================================
-
-    archivo_gl = os.path.join(
-        ruta_glad,
-        "include",
-        "glad",
-        "gl.h"
-    )
-
-    archivo_khr = os.path.join(
-        ruta_glad,
-        "include",
-        "KHR",
-        "khrplatform.h"
-    )
-
-    archivo_c = os.path.join(
-        ruta_glad,
-        "src",
-        "gl.c"
-    )
-
-
-    archivos_esperados = [
-        archivo_gl,
-        archivo_khr,
-        archivo_c
-    ]
-
-
-    # ============================================================
-    # VERIFICAR ARCHIVOS
-    # ============================================================
-
-    faltantes = []
-
-    for archivo in archivos_esperados:
-
-        if not os.path.isfile(archivo):
-
-            faltantes.append(
-                archivo
+            _ui_messagebox(
+                "showerror",
+                "GLAD",
+                "GLAD terminó con errores.\n\n"
+                f"Código de salida: {codigo_salida}\n\n"
+                "Revisa la consola de la IDE."
             )
+            return
 
+        # --------------------------------------------------------
+        # COMPROBAR ARCHIVOS GENERADOS
+        # --------------------------------------------------------
 
-    if faltantes:
+        archivo_gl = os.path.join(
+            ruta_glad, "include", "glad", "gl.h"
+        )
+        archivo_khr = os.path.join(
+            ruta_glad, "include", "KHR", "khrplatform.h"
+        )
+        archivo_c = os.path.join(
+            ruta_glad, "src", "gl.c"
+        )
 
-        if 'print_consola' in globals():
+        archivos_esperados = [
+            archivo_gl,
+            archivo_khr,
+            archivo_c
+        ]
 
-            print_consola(
+        faltantes = [
+            archivo for archivo in archivos_esperados
+            if not os.path.isfile(archivo)
+        ]
+
+        if faltantes:
+            _ui_print_consola(
                 "\033[1;31m"
                 "❌ GLAD terminó pero faltan archivos:"
                 "\033[0m"
             )
 
-            for archivo in faltantes:
-
-                print_consola(
+            for archivo_faltante in faltantes:
+                _ui_print_consola(
                     "\033[1;31m"
-                    f"   ❌ {archivo}"
+                    f"   ❌ {archivo_faltante}"
                     "\033[0m"
                 )
 
-
-        messagebox.showerror(
-            "GLAD",
-            "GLAD terminó pero no se encontraron "
-            "todos los archivos esperados.\n\n"
-            + "\n".join(
-                faltantes
+            _ui_messagebox(
+                "showerror",
+                "GLAD",
+                "GLAD terminó pero no se encontraron "
+                "todos los archivos esperados.\n\n"
+                + "\n".join(faltantes)
             )
-        )
+            return
 
-        return False
+        # --------------------------------------------------------
+        # ÉXITO
+        # --------------------------------------------------------
 
-
-    # ============================================================
-    # ÉXITO
-    # ============================================================
-
-    if 'print_consola' in globals():
-
-        print_consola(
+        mensajes = [
             "\033[1;32m"
             "=============================================="
-            "\033[0m"
-        )
-
-        print_consola(
+            "\033[0m",
             "\033[1;32m"
             "✅ GLAD generado correctamente."
-            "\033[0m"
-        )
-
-        print_consola(
+            "\033[0m",
             "\033[1;32m"
             "=============================================="
-            "\033[0m"
-        )
-
-        print_consola(
+            "\033[0m",
             "\033[1;36m"
             f"📁 Carpeta GLAD: {ruta_glad}"
-            "\033[0m"
-        )
-
-        print_consola(
+            "\033[0m",
             "\033[1;36m"
             f"📄 {os.path.relpath(archivo_gl, ruta_proyecto)}"
-            "\033[0m"
-        )
-
-        print_consola(
+            "\033[0m",
             "\033[1;36m"
             f"📄 {os.path.relpath(archivo_khr, ruta_proyecto)}"
-            "\033[0m"
-        )
-
-        print_consola(
+            "\033[0m",
             "\033[1;36m"
             f"📄 {os.path.relpath(archivo_c, ruta_proyecto)}"
             "\033[0m"
+        ]
+
+        for mensaje in mensajes:
+            _ui_print_consola(mensaje)
+
+        _ui_messagebox(
+            "showinfo",
+            "GLAD",
+            "GLAD generado correctamente.\n\n"
+            f"Proyecto:\n{ruta_proyecto}\n\n"
+            "OpenGL: 3.3 Core\n\n"
+            "Archivos:\n"
+            "• glad/include/glad/gl.h\n"
+            "• glad/include/KHR/khrplatform.h\n"
+            "• glad/src/gl.c"
         )
 
-
-    # ============================================================
-    # MENSAJE FINAL
-    # ============================================================
-
-    messagebox.showinfo(
-        "GLAD",
-        "GLAD generado correctamente.\n\n"
-        f"Proyecto:\n{ruta_proyecto}\n\n"
-        "OpenGL: 3.3 Core\n\n"
-        "Archivos:\n"
-        "• glad/include/glad/gl.h\n"
-        "• glad/include/KHR/khrplatform.h\n"
-        "• glad/src/gl.c"
-    )
-
+    threading.Thread(
+        target=_ejecutar_glad,
+        daemon=True
+    ).start()
 
     return True
 
@@ -3815,7 +3730,6 @@ def ejecutar_bgfx():
             )
             print_consola("🚀 Weston compositor iniciado...")
             # Esperar socket Wayland
-            import time, os
             wayland_socket = None
             for _ in range(50):  # 5 segundos máximo
                 # Buscar sockets existentes: wayland-0, wayland-1, etc.
@@ -3837,7 +3751,6 @@ def ejecutar_bgfx():
     else:
         print_consola("✅ Weston ya estaba en ejecución.")
         # Detectar socket activo
-        import os
         wayland_socket = None
         for f in os.listdir(f"/run/user/{os.getuid()}"):
             if f.startswith("wayland-"):
@@ -3870,7 +3783,6 @@ def ejecutar_bgfx():
     )
 
     # Hilos para leer stdout y stderr
-    import threading
     threading.Thread(target=_leer_salida, args=(bgfx_proc.stdout,), daemon=True).start()
     threading.Thread(target=_leer_salida, args=(bgfx_proc.stderr,), daemon=True).start()
 
@@ -4283,6 +4195,16 @@ consola.tag_config("azul", foreground="#82AAFF")
 consola.tag_config("magenta", foreground="#C792EA")
 
 # Función para imprimir en la consola
+
+
+def _ui_print_consola(mensaje):
+    """Programa la escritura en la consola desde el hilo de Tkinter."""
+    root.after(0, print_consola, mensaje)
+
+
+def _ui_messagebox(tipo, *args):
+    """Programa los diálogos para que se abran desde el hilo de Tkinter."""
+    root.after(0, getattr(messagebox, tipo), *args)
 
 
 def print_consola(mensaje):
