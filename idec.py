@@ -3167,8 +3167,17 @@ def _leer_salida(pipe):
     pipe.close()
 
 # Entrada de consola para enviar datos al proceso
-entrada_consola = tk.Entry(frame_consola, bg="black", fg="white",
-                           font=("Courier", 12), insertbackground="white")
+entrada_consola = tk.Entry(
+    frame_consola,
+    bg="#0D1117",
+    fg="#D8DEE9",
+    font=("Consolas", 11),
+    insertbackground="#4DE3C1",
+    selectbackground="#354457",
+    selectforeground="#FFFFFF",
+    relief="flat",
+    bd=0
+)
 entrada_consola.pack(fill="x")
 
 def enviar_a_proceso(event=None):
@@ -3957,11 +3966,31 @@ lineas.pack(side="left", fill="y")
 # --- Editor PRINCIPAL  ---
 
 # Scrollbar vertical del editor
-scroll_vert = tk.Scrollbar(frame_editor, orient="vertical", command=lambda *args: [editor.yview(*args), lineas.yview(*args)])
+scroll_vert = tk.Scrollbar(
+    frame_editor,
+    orient="vertical",
+    bg="#3A3F4B",
+    troughcolor="#181C24",
+    activebackground="#61AFEF",
+    relief="flat",
+    bd=0,
+    highlightthickness=0,
+    command=lambda *args: [editor.yview(*args), lineas.yview(*args)],
+)
 scroll_vert.pack(side="right", fill="y")
 
 # Scrollbar horizontal del editor
-scroll_hor = tk.Scrollbar(frame_editor, orient="horizontal", command=lambda *args: [editor.xview(*args), lineas.xview(*args)])
+scroll_hor = tk.Scrollbar(
+    frame_editor,
+    orient="horizontal",
+    bg="#3A3F4B",
+    troughcolor="#181C24",
+    activebackground="#61AFEF",
+    relief="flat",
+    bd=0,
+    highlightthickness=0,
+    command=lambda *args: [editor.xview(*args), lineas.xview(*args)],
+)
 scroll_hor.pack(side="bottom", fill="x")
 
 #------AREA DE TRABAJO-----
@@ -3973,7 +4002,6 @@ editor.pack(side="left", fill="both", expand=True)
 def sync_scroll(*args):
     editor.yview(*args)
     lineas.yview(*args)
-    scroll_vert.set(*args)  # actualiza scrollbar vertical
 
 # Conectar scrollbars con editor y línea
 editor.config(yscrollcommand=scroll_vert.set, xscrollcommand=scroll_hor.set)
@@ -4233,7 +4261,17 @@ consola = tk.Text(frame_consola, height=10, bg="#0D1117", fg="#D8DEE9", font=("C
 consola.pack(side="left", fill="both", expand=True)
 
 # Scroll vertical
-scroll_consola = tk.Scrollbar(frame_consola, command=consola.yview)
+scroll_consola = tk.Scrollbar(
+    frame_consola,
+    orient="vertical",
+    bg="#3A3F4B",
+    troughcolor="#181C24",
+    activebackground="#61AFEF",
+    relief="flat",
+    bd=0,
+    highlightthickness=0,
+    command=consola.yview,
+)
 scroll_consola.pack(side="right", fill="y")
 consola.config(yscrollcommand=scroll_consola.set)
 
