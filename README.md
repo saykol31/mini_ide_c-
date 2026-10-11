@@ -1,6 +1,4 @@
-# mini_ide_c++
-
-# mini_ide_c- — Mini IDE para C/C++ en Python
+ Mini IDE para C/C++ en Python
 
 IDE ligera de un solo archivo (`idec.py`, Tkinter) para programar en C/C++
 en Linux: editor con resaltado de sintaxis, compilación directa, generación
