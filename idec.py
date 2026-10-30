@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import re
 import shlex
+import shutil
 import subprocess
 import threading
 import tkinter as tk
@@ -475,6 +476,14 @@ def ejecutar_updater():
         messagebox.showerror(
             "Error",
             f"No se encontró el archivo: {UPDATER}"
+        )
+        return
+
+    if not shutil.which("konsole"):
+        messagebox.showerror(
+            "Error",
+            "El Update necesita la terminal konsole y no está instalada.\n"
+            "Instálala con:  sudo apt install konsole"
         )
         return
 
@@ -3089,7 +3098,12 @@ def depurar():
 
         _ui_print_consola("\033[34m⚡ Usa NIVEL 1 para empezar, NIVEL 2 para diagnóstico, y NIVEL 3 cuando quieras control quirúrgico total.\033[0m")
 
-        # Lanzar konsole real con GDB
+        # Lanzar konsole real con GDB (si falta la terminal, avisar y salir)
+        if not shutil.which("konsole"):
+            _ui_print_consola("\033[1;31m❌ El Debug necesita la terminal konsole y no está instalada.\033[0m")
+            _ui_print_consola("\033[1;33mInstálala con:  sudo apt install konsole\033[0m")
+            return
+
         bash_cmd = f"gdb {shlex.quote(salida)}"
         subprocess.Popen(
             ["konsole", "--noclose", "-e", "bash", "-c", bash_cmd],
