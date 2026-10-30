@@ -8,6 +8,44 @@ herramientas para gráficos (Weston/BGFX, GLAD).
 > Proyecto personal: mi debut en Python, después de un simulador de tanque
 > procedural en SDL2.
 
+## Instalación rápida (Debian y derivados)
+
+Si solo quieres abrir el IDE y compilar tu primer programa, no tienes que
+instalar los requisitos uno por uno: el repo trae un instalador.
+
+**1. Entra a la carpeta del proyecto** (donde están `idec.py` e `install.sh`):
+
+```bash
+cd mini_ide_c-
+```
+
+**2. Dale permiso de ejecución al instalador** (Linux no ejecuta un script
+recién descargado hasta que se lo permites; solo se hace una vez):
+
+```bash
+chmod +x install.sh
+```
+
+**3. Ejecuta el instalador:**
+
+```bash
+./install.sh
+```
+
+Te pedirá tu contraseña (es para `sudo`). Instala el mínimo que el IDE
+necesita para abrirse — Python 3, Tkinter, Pillow y el compilador `g++` — y
+al final verifica que todo quedó bien.
+
+**4. Abre el IDE:**
+
+```bash
+python3 idec.py
+```
+
+> El instalador cubre lo mínimo para abrir el IDE y usar la compilación
+> directa (F6). Los botones avanzados (CMake, Debug, gráficos) usan las
+> herramientas de la sección **Requisitos**.
+
 ## Requisitos
 
 - **Linux** (no corre en Windows: usa `bash`, `konsole` y rutas POSIX)
